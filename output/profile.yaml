@@ -17970,7 +17970,7 @@ proxy-groups:
   - DIRECT
 - name: ⚡ AUTO
   type: url-test
-  url: http://cp.cloudflare.com/generate_204
+  url: http://1.1.1.1/generate_204
   interval: 180
   tolerance: 30
   lazy: false
