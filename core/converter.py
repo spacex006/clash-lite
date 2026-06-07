@@ -40,7 +40,7 @@ def build_config(proxies: List[Dict]) -> Dict:
     # ── DNS ─────────────────────────────────────────────────────────────────
     dns: Dict = {
         "enable":        True,
-        "ipv6":          false,
+        "ipv6":          False,
         "enhanced-mode": "fake-ip",
         "fake-ip-range": "198.18.0.1/16",
         "fake-ip-filter": [
