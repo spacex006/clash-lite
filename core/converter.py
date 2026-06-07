@@ -40,7 +40,7 @@ def build_config(proxies: List[Dict]) -> Dict:
     # ── DNS ─────────────────────────────────────────────────────────────────
     dns: Dict = {
         "enable":        True,
-        "ipv6":          True,
+        "ipv6":          false,
         "enhanced-mode": "fake-ip",
         "fake-ip-range": "198.18.0.1/16",
         "fake-ip-filter": [
@@ -63,7 +63,7 @@ def build_config(proxies: List[Dict]) -> Dict:
     group_auto: Dict = {
         "name":      "⚡ AUTO",
         "type":      "url-test",
-        "url":       "https://www.gstatic.com/generate_204",
+        "url":       "http://1.1.1.1/generate_204",
         "interval":  180,          # هر ۳ دقیقه تست
         "tolerance": 30,           # حساسیت تعویض: ۳۰ms
         "lazy":      False,        # همیشه در پس‌زمینه تست کند
