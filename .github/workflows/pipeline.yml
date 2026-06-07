@@ -2,7 +2,7 @@ name: 🔄 Proxy Pipeline
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # هر ۶ ساعت یکبار
+    - cron: '0 */2 * * *'   # هر ۶ ساعت یکبار
   workflow_dispatch:          # اجرای دستی از تب Actions
   push:
     paths:
