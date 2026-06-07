@@ -17970,7 +17970,7 @@ proxy-groups:
   - DIRECT
 - name: ⚡ AUTO
   type: url-test
-  url: https://cloudflare.com/cdn-cgi/trace
+  url: url: http://cp.cloudflare.com/generate_204
   interval: 180
   tolerance: 30
   lazy: false
