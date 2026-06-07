@@ -65,7 +65,7 @@ def build_config(proxies: List[Dict]) -> Dict:
         "type":      "url-test",
         "url":       "http://1.1.1.1/generate_204",
         "interval":  180,          # هر ۳ دقیقه تست
-        "tolerance": 50,           # حساسیت تعویض: 50۰ms
+        "tolerance": 30,           # حساسیت تعویض: 50۰ms
         "lazy":      False,        # همیشه در پس‌زمینه تست کند
         "proxies":   names if names else ["DIRECT"],
     }
