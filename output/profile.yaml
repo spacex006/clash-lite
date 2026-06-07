@@ -737,7 +737,7 @@ proxies:
   port: 443
   uuid: edbb1059-1633-4271-b66e-ed4fba47a1bf
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   servername: linde06.indiavideo.sbs
@@ -933,7 +933,7 @@ proxies:
   port: 443
   uuid: 824c58b1-65ba-4680-a609-663a000dbb92
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   network: ws
@@ -1414,7 +1414,7 @@ proxies:
   port: 443
   uuid: 05641cf5-58d2-4ba4-a9f1-b3cda0b1fb1d
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   servername: 2022585a-86a7-4231-b3a0-eeda14f77f4d.8f18237c-8e5f-4ffb-a434-1b2948c87be3.ddnsfree.com
@@ -1443,7 +1443,7 @@ proxies:
   port: 443
   uuid: c5a2d7b8-bf84-4f97-8577-b9b87f2baaf7
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   network: ws
@@ -1487,7 +1487,7 @@ proxies:
   port: 443
   uuid: 950db6aa-4926-4616-816e-ec0312dcb87b
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   network: ws
@@ -1741,7 +1741,7 @@ proxies:
   port: 80
   uuid: dd41b5cb-b72e-4a8c-c75a-3ecc928d6eb3
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   network: ws
   ws-opts:
@@ -1807,7 +1807,7 @@ proxies:
   port: 443
   uuid: 62aa5f80-0328-4004-a375-7f5a59df4022
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   servername: hms19.best-tizi.top
@@ -2371,7 +2371,7 @@ proxies:
   port: 2053
   uuid: 72f76c36-3e3c-45b3-a61f-d8f017345958
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   network: ws
@@ -2493,7 +2493,7 @@ proxies:
   port: 443
   uuid: edbb1059-1633-4271-b66e-ed4fba47a1bf
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   servername: linde06.indiavideo.sbs
@@ -2522,7 +2522,7 @@ proxies:
   port: 443
   uuid: 56a2188b-2ab7-402c-b9b8-34847fdf0958
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   network: ws
@@ -2626,7 +2626,7 @@ proxies:
   port: 443
   uuid: c5a2d7b8-bf84-4f97-8577-b9b87f2baaf7
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   network: ws
@@ -2755,7 +2755,7 @@ proxies:
   port: 80
   uuid: d1fb628c-206e-42a7-837b-4147255fbaeb
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   network: ws
   ws-opts:
@@ -3018,7 +3018,7 @@ proxies:
   port: 443
   uuid: 824c58b1-65ba-4680-a609-663a000dbb92
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   network: ws
@@ -3084,7 +3084,7 @@ proxies:
   port: 2095
   uuid: 417d27fb-cb93-3bd8-9bf7-71cd91319821
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   network: ws
   ws-opts:
@@ -3152,7 +3152,7 @@ proxies:
   port: 80
   uuid: dd41b5cb-b72e-4a8c-c75a-3ecc928d6eb3
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   network: ws
   ws-opts:
@@ -3353,7 +3353,7 @@ proxies:
   port: 2095
   uuid: 417d27fb-cb93-3bd8-9bf7-71cd91319821
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   network: ws
   ws-opts:
@@ -3419,7 +3419,7 @@ proxies:
   port: 80
   uuid: 65b17c0b-0a52-4b54-9bc9-60e31397b841
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   network: ws
   ws-opts:
@@ -3456,7 +3456,7 @@ proxies:
   port: 443
   uuid: 824c58b1-65ba-4680-a609-663a000dbb92
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   network: ws
@@ -3634,7 +3634,7 @@ proxies:
   port: 443
   uuid: 4612618c-24cd-4379-9924-cfdf3d61fa5a
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   network: ws
@@ -3761,7 +3761,7 @@ proxies:
   port: 443
   uuid: 17b2a313-37a0-4945-a8e4-e63375506b4a
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   network: ws
@@ -4120,7 +4120,7 @@ proxies:
   port: 443
   uuid: 56a2188b-2ab7-402c-b9b8-34847fdf0958
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   network: ws
@@ -4603,7 +4603,7 @@ proxies:
   port: 443
   uuid: fcfaec91-6096-44d8-956c-7868d9e874b1
   alterId: 0
-  cipher: auto
+  cipher: 
   udp: true
   tls: true
   network: ws
