@@ -9,3 +9,4 @@
 # ── سورس‌های بیشتر را اینجا اضافه کن ─────────────────────────────
 # https://...
 https://raw.githubusercontent.com/10Dream/VpnClashFaCollector/refs/heads/main/sub/all/mixed.txt
+https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/V2Ray-Config-By-EbraSha-All-Type.txt
