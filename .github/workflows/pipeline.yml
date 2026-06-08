@@ -44,3 +44,5 @@ jobs:
             git commit -m "🔄 proxies updated $(date -u '+%Y-%m-%d %H:%M UTC')"
             git push
           fi
+          - name: 🐛 Debug
+          run: python debug.py
