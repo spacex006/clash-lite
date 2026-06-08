@@ -12,14 +12,10 @@ from typing import Dict, List, Tuple
 # ──────────────────────────────────────────────────────────────────────────────
 
 _MAX_SID_HEX  = 16
-_SID_CHARS_RE = re.compile(r"^[0-9a-fA-F]+$")   # ← + بجای * (رشته خالی reject)
+_SID_CHARS_RE = re.compile(r"^[0-9a-fA-F]+$")
 
 
 def fix_reality_short_id(sid) -> Tuple[str, bool]:
-    """
-    اصلاح و normalize کردن REALITY short-id.
-    اگر بعد از اصلاح خالی شد → رشته خالی برمی‌گرداند (که در post_fix_filter حذف می‌شود).
-    """
     if sid is None:
         sid = ""
     if not isinstance(sid, str):
@@ -38,13 +34,9 @@ def fix_reality_short_id(sid) -> Tuple[str, bool]:
 
 
 def is_valid_short_id(sid: str) -> bool:
-    """
-    بررسی معتبر بودن short-id.
-    رشته خالی → نامعتبر (Mihomo/FClash آن را reject می‌کند).
-    """
     if not isinstance(sid, str):
         return False
-    if len(sid) == 0:           # ← خالی نامعتبر
+    if len(sid) == 0:
         return False
     return (
         bool(_SID_CHARS_RE.match(sid))
@@ -71,6 +63,56 @@ def fix_vmess_cipher(cipher) -> Tuple[str, bool]:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# Shadowsocks cipher
+# ──────────────────────────────────────────────────────────────────────────────
+
+# مقادیر معتبر cipher برای Shadowsocks در Mihomo/Clash
+VALID_SS_CIPHERS = frozenset({
+    # AEAD (پیشنهادی)
+    "aes-128-gcm", "aes-192-gcm", "aes-256-gcm",
+    "chacha20-ietf-poly1305", "xchacha20-ietf-poly1305",
+    # AEAD 2022
+    "2022-blake3-aes-128-gcm",
+    "2022-blake3-aes-256-gcm",
+    "2022-blake3-chacha20-poly1305",
+    # Stream (legacy)
+    "aes-128-ctr", "aes-192-ctr", "aes-256-ctr",
+    "aes-128-cfb", "aes-192-cfb", "aes-256-cfb",
+    "rc4-md5", "chacha20-ietf", "xchacha20",
+    # سایر
+    "none", "plain",
+})
+
+# نگاشت مقادیر اشتباه به معتبر
+_SS_ALIASES = {
+    "auto":                    "aes-256-gcm",
+    "chacha20":                "chacha20-ietf-poly1305",
+    "chacha20-poly1305":       "chacha20-ietf-poly1305",
+    "aes-256-poly1305":        "aes-256-gcm",
+}
+
+
+def fix_ss_cipher(cipher) -> Tuple[str, bool]:
+    """
+    اصلاح cipher Shadowsocks.
+    اگر معتبر بود → بدون تغییر
+    اگر در alias بود → نگاشت
+    در غیر اینصورت → None برمی‌گرداند (proxy باید حذف شود)
+    """
+    raw = str(cipher or "").strip()
+    clean = raw.lower()
+
+    if clean in VALID_SS_CIPHERS:
+        return clean, (clean != raw)
+
+    if clean in _SS_ALIASES:
+        return _SS_ALIASES[clean], True
+
+    # نامعتبر — برمی‌گرداند رشته خالی تا در post_fix_filter حذف شود
+    return "", True
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # اصلاح یک proxy
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -91,8 +133,6 @@ def fix_proxy(p: Dict) -> Tuple[Dict, List[str]]:
                 f"[{name}] reality short-id: {raw_sid!r} → {fixed_sid!r}"
             )
 
-        # اگر short-id بعد از اصلاح خالی شد، اصلاً فیلد را نگذار
-        # (در post_fix_filter حذف خواهد شد)
         if fixed_sid:
             ro["short-id"] = fixed_sid
         else:
@@ -107,6 +147,16 @@ def fix_proxy(p: Dict) -> Tuple[Dict, List[str]]:
         if changed:
             changes.append(
                 f"[{name}] vmess cipher: {raw_cipher!r} → {fixed_cipher!r}"
+            )
+        p["cipher"] = fixed_cipher
+
+    # ── ②-b Shadowsocks cipher ──────────────────────────────────────────────
+    if p.get("type") == "ss":
+        raw_cipher = p.get("cipher", "")
+        fixed_cipher, changed = fix_ss_cipher(raw_cipher)
+        if changed:
+            changes.append(
+                f"[{name}] ss cipher: {raw_cipher!r} → {fixed_cipher!r}"
             )
         p["cipher"] = fixed_cipher
 
@@ -148,9 +198,6 @@ def fix_all(proxies: List[Dict]) -> Tuple[List[Dict], int]:
 # ──────────────────────────────────────────────────────────────────────────────
 
 def post_fix_filter(proxies: List[Dict]) -> Tuple[List[Dict], List[str]]:
-    """
-    آخرین خط دفاعی: حذف هر proxy که هنوز مشکل دارد.
-    """
     valid: List[Dict] = []
     removed: List[str] = []
 
@@ -159,26 +206,30 @@ def post_fix_filter(proxies: List[Dict]) -> Tuple[List[Dict], List[str]]:
         ptype = p.get("type", "")
         issue = None
 
-        # ── بررسی REALITY ──────────────────────────────────────────────
+        # ── REALITY ─────────────────────────────────────────────────────
         ro = p.get("reality-opts")
         if isinstance(ro, dict):
-            # public-key اجباری است
             pbk = str(ro.get("public-key", "")).strip()
             if not pbk:
                 issue = "REALITY: public-key خالی است"
             else:
-                # short-id اجباری و باید معتبر باشد
                 sid = ro.get("short-id", "")
                 if not sid or not is_valid_short_id(str(sid)):
                     issue = f"REALITY short-id نامعتبر: {sid!r}"
 
-        # ── بررسی VMess cipher ─────────────────────────────────────────
+        # ── VMess cipher ────────────────────────────────────────────────
         if not issue and ptype == "vmess":
             cipher = str(p.get("cipher", "")).strip()
             if cipher not in VALID_VMESS_CIPHERS:
                 issue = f"vmess cipher نامعتبر: {cipher!r}"
 
-        # ── بررسی server و port ───────────────────────────────────────
+        # ── Shadowsocks cipher ──────────────────────────────────────────
+        if not issue and ptype == "ss":
+            cipher = str(p.get("cipher", "")).strip().lower()
+            if not cipher or cipher not in VALID_SS_CIPHERS:
+                issue = f"ss cipher نامعتبر: {cipher!r}"
+
+        # ── server و port ───────────────────────────────────────────────
         if not issue:
             try:
                 port = int(p.get("port", 0))
