@@ -14,35 +14,55 @@ from typing import Dict, List, Tuple
 _MAX_SID_HEX  = 16
 _SID_CHARS_RE = re.compile(r"^[0-9a-fA-F]+$")
 
-
 def fix_reality_short_id(sid) -> Tuple[str, bool]:
+    """
+    اصلاح و normalize کردن REALITY short-id.
+    
+    Mihomo/FClash فقط این طول‌ها رو قبول میکنه:
+    0, 2, 4, 8, 16 hex character (یعنی 0, 1, 2, 4, 8 byte)
+    
+    اگر طول غیر استاندارد بود → trim به نزدیکترین طول معتبر کوچک‌تر.
+    """
     if sid is None:
         sid = ""
     if not isinstance(sid, str):
         sid = str(sid)
 
     original = sid
+    
+    # حذف کاراکترهای غیر hex
     clean = re.sub(r"[^0-9a-fA-F]", "", sid).lower()
-
-    if len(clean) % 2 != 0:
-        clean = clean[:-1]
-    if len(clean) > _MAX_SID_HEX:
-        clean = clean[:_MAX_SID_HEX]
+    
+    # طول‌های معتبر Mihomo: 0, 2, 4, 8, 16
+    VALID_LENGTHS = [16, 8, 4, 2, 0]
+    
+    # بزرگترین طول معتبر که <= طول فعلی
+    current_len = len(clean)
+    target_len = 0
+    for vl in VALID_LENGTHS:
+        if current_len >= vl:
+            target_len = vl
+            break
+    
+    clean = clean[:target_len]
 
     changed = (clean != original.lower())
     return clean, changed
 
 
+
 def is_valid_short_id(sid: str) -> bool:
+    """
+    بررسی معتبر بودن short-id.
+    Mihomo فقط طول‌های 2, 4, 8, 16 hex قبول میکنه (طول 0 یعنی غایب).
+    """
     if not isinstance(sid, str):
         return False
     if len(sid) == 0:
+        return False  # رشته خالی نامعتبر (در post_fix_filter حذف میشه)
+    if len(sid) not in (2, 4, 8, 16):
         return False
-    return (
-        bool(_SID_CHARS_RE.match(sid))
-        and len(sid) % 2 == 0
-        and len(sid) <= _MAX_SID_HEX
-    )
+    return bool(_SID_CHARS_RE.match(sid))
 
 
 # ──────────────────────────────────────────────────────────────────────────────
