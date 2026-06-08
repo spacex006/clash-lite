@@ -33,6 +33,9 @@ jobs:
       - name: 🚀 Run pipeline
         run: python main.py
 
+      - name: 🐛 Debuge
+        run: python debug.py
+          
       - name: 💾 Commit & push
         run: |
           git config user.name  "github-actions[bot]"
@@ -44,5 +47,3 @@ jobs:
             git commit -m "🔄 proxies updated $(date -u '+%Y-%m-%d %H:%M UTC')"
             git push
           fi
-          - name: 🐛 Debug
-          run: python debug.py
