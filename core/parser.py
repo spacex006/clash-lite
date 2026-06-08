@@ -100,7 +100,6 @@ def _vless(uri: str) -> Optional[Dict]:
     try:
         rest = uri[8:]
 
-        # fragment = اسم
         name_raw = ""
         if "#" in rest:
             rest, name_raw = rest.rsplit("#", 1)
@@ -130,7 +129,6 @@ def _vless(uri: str) -> Optional[Dict]:
             "udp":    True,
         }
 
-        # Security
         sec = q.get("security", "none").lower()
         if sec in ("tls", "reality"):
             p["tls"] = True
@@ -143,21 +141,29 @@ def _vless(uri: str) -> Optional[Dict]:
             alpn = q.get("alpn", "").strip()
             if alpn:
                 p["alpn"] = [a for a in alpn.split(",") if a]
+
             if sec == "reality":
-                ro: Dict = {}
                 pbk = q.get("pbk", "").strip()
                 sid = q.get("sid", "").strip()
-                spx = q.get("spx", "").strip()
-                if pbk: ro["public-key"] = pbk
-                if sid: ro["short-id"]   = sid
-                if spx: ro["spider-x"]   = spx
-                if ro:  p["reality-opts"] = ro
+                # اگر pbk یا sid نباشه، اصلاً reality-opts نساز
+                # (post_fix_filter بعداً این proxy رو حذف می‌کنه)
+                if pbk and sid:
+                    ro: Dict = {
+                        "public-key": pbk,
+                        "short-id":   sid,
+                    }
+                    spx = q.get("spx", "").strip()
+                    if spx:
+                        ro["spider-x"] = spx
+                    p["reality-opts"] = ro
+                else:
+                    # REALITY بدون pbk/sid نامعتبر است → علامت‌گذاری برای حذف
+                    p["reality-opts"] = {"public-key": pbk, "short-id": sid}
 
         flow = q.get("flow", "").strip()
         if flow:
             p["flow"] = flow
 
-        # Transport
         net = q.get("type", "tcp").lower()
         path = urllib.parse.unquote(q.get("path", ""))
         host_h = q.get("host", "")
