@@ -1,9 +1,10 @@
 """
-debug.py — پیدا کردن proxy خاص با شماره
+debug.py — پیدا کردن همه proxy های مشکوک REALITY
 """
 
 import yaml
 from pathlib import Path
+import json
 
 PROFILE = Path("output/profile.yaml")
 
@@ -14,10 +15,8 @@ config = yaml.safe_load(yaml_text)
 proxies = config.get("proxies", [])
 print(f"کل proxy ها: {len(proxies)}\n")
 
-# proxy های مشکوک: همه vless با reality
-print("=" * 70)
-print("بررسی همه vless+reality:")
-print("=" * 70)
+# پیدا کردن همه proxy های مشکوک
+suspicious = []
 
 for i, p in enumerate(proxies):
     if p.get("type") != "vless":
@@ -29,31 +28,45 @@ for i, p in enumerate(proxies):
     sid = ro.get("short-id", "")
     pbk = ro.get("public-key", "")
     
-    # نمایش اطلاعات
-    sid_type = type(sid).__name__
-    sid_repr = repr(sid)
+    issues = []
     
-    print(f"\n#{i} | {p.get('name', '?')[:40]}")
-    print(f"  short-id: {sid_repr}  (type={sid_type}, len={len(str(sid))})")
-    print(f"  pbk: {pbk[:30]}...")
+    # چک نوع
+    if not isinstance(sid, str):
+        issues.append(f"NOT_STRING (type={type(sid).__name__}, value={sid!r})")
+    else:
+        if not sid:
+            issues.append("EMPTY")
+        elif not all(c in "0123456789abcdefABCDEF" for c in sid):
+            issues.append(f"NON_HEX: {sid!r}")
+        elif len(sid) % 2 != 0:
+            issues.append(f"ODD_LENGTH: {sid!r} (len={len(sid)})")
+        elif len(sid) > 16:
+            issues.append(f"TOO_LONG: {sid!r} (len={len(sid)})")
     
-    # هشدارها
-    if not sid:
-        print("  ⚠ short-id خالی!")
-    elif not isinstance(sid, str):
-        print(f"  ⚠ short-id غیر string! (تبدیل اتومتیک PyYAML)")
-    elif not all(c in "0123456789abcdefABCDEF" for c in sid):
-        print(f"  ⚠ short-id کاراکتر غیر hex داره!")
-    elif len(sid) % 2 != 0:
-        print(f"  ⚠ short-id طول فرد داره!")
-    elif len(sid) > 16:
-        print(f"  ⚠ short-id بیش از 16 کاراکتر!")
+    if not isinstance(pbk, str) or not pbk:
+        issues.append("PBK_INVALID")
+    
+    if issues:
+        suspicious.append((i+1, p.get('name', '?')[:50], sid, issues))
 
-print("\n" + "=" * 70)
-print("بررسی proxy شماره 2224 (index 2223):")
+print(f"تعداد proxy مشکوک: {len(suspicious)}")
 print("=" * 70)
 
-if len(proxies) >= 2224:
-    p = proxies[2223]
-    import json
-    print(json.dumps(p, indent=2, ensure_ascii=False, default=str))
+for num, name, sid, issues in suspicious:
+    print(f"\n#{num} | {name}")
+    print(f"  short-id: {sid!r}  type={type(sid).__name__}")
+    for issue in issues:
+        print(f"  ⚠ {issue}")
+
+if not suspicious:
+    print("\n✅ هیچ proxy مشکوکی پیدا نشد!")
+    print("\nنکته: FClash ممکنه از proxy های دیگه (غیر REALITY) هم شکایت کنه")
+    print("لطفاً یه نمونه از proxy های REALITY رو نشون بده:\n")
+    
+    count = 0
+    for i, p in enumerate(proxies):
+        if p.get("type") == "vless" and isinstance(p.get("reality-opts"), dict):
+            print(f"#{i+1}: {json.dumps(p, ensure_ascii=False, default=str)}")
+            count += 1
+            if count >= 3:
+                break
