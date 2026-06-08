@@ -1,10 +1,10 @@
 """
-debug.py — پیدا کردن همه proxy های مشکوک REALITY
+debug.py — تحلیل آماری REALITY short-id ها
 """
 
 import yaml
 from pathlib import Path
-import json
+from collections import Counter
 
 PROFILE = Path("output/profile.yaml")
 
@@ -15,8 +15,9 @@ config = yaml.safe_load(yaml_text)
 proxies = config.get("proxies", [])
 print(f"کل proxy ها: {len(proxies)}\n")
 
-# پیدا کردن همه proxy های مشکوک
-suspicious = []
+# آمار طول short-id ها
+length_counter = Counter()
+sample_by_length = {}
 
 for i, p in enumerate(proxies):
     if p.get("type") != "vless":
@@ -26,47 +27,49 @@ for i, p in enumerate(proxies):
         continue
     
     sid = ro.get("short-id", "")
-    pbk = ro.get("public-key", "")
-    
-    issues = []
-    
-    # چک نوع
     if not isinstance(sid, str):
-        issues.append(f"NOT_STRING (type={type(sid).__name__}, value={sid!r})")
-    else:
-        if not sid:
-            issues.append("EMPTY")
-        elif not all(c in "0123456789abcdefABCDEF" for c in sid):
-            issues.append(f"NON_HEX: {sid!r}")
-        elif len(sid) % 2 != 0:
-            issues.append(f"ODD_LENGTH: {sid!r} (len={len(sid)})")
-        elif len(sid) > 16:
-            issues.append(f"TOO_LONG: {sid!r} (len={len(sid)})")
+        sid = str(sid)
     
-    if not isinstance(pbk, str) or not pbk:
-        issues.append("PBK_INVALID")
+    length = len(sid)
+    length_counter[length] += 1
     
-    if issues:
-        suspicious.append((i+1, p.get('name', '?')[:50], sid, issues))
+    # نمونه ذخیره کن
+    if length not in sample_by_length:
+        sample_by_length[length] = (i+1, sid, p.get("name", "?")[:40])
 
-print(f"تعداد proxy مشکوک: {len(suspicious)}")
+print("=" * 70)
+print("توزیع طول REALITY short-id ها:")
+print("=" * 70)
+for length in sorted(length_counter.keys()):
+    count = length_counter[length]
+    num, sid, name = sample_by_length[length]
+    bytes_len = length // 2
+    print(f"  طول {length:>2} hex ({bytes_len} بایت) → {count:>4} proxy   نمونه #{num}: {sid!r}")
+
+print("\n" + "=" * 70)
+print("طول‌های استاندارد Mihomo REALITY: 0, 2, 4, 8, 16 hex")
 print("=" * 70)
 
-for num, name, sid, issues in suspicious:
-    print(f"\n#{num} | {name}")
-    print(f"  short-id: {sid!r}  type={type(sid).__name__}")
-    for issue in issues:
-        print(f"  ⚠ {issue}")
+# پیدا کردن proxy هایی با طول غیر استاندارد
+STANDARD_LENGTHS = {0, 2, 4, 8, 16}
+non_standard = []
 
-if not suspicious:
-    print("\n✅ هیچ proxy مشکوکی پیدا نشد!")
-    print("\nنکته: FClash ممکنه از proxy های دیگه (غیر REALITY) هم شکایت کنه")
-    print("لطفاً یه نمونه از proxy های REALITY رو نشون بده:\n")
+for i, p in enumerate(proxies):
+    if p.get("type") != "vless":
+        continue
+    ro = p.get("reality-opts")
+    if not isinstance(ro, dict):
+        continue
     
-    count = 0
-    for i, p in enumerate(proxies):
-        if p.get("type") == "vless" and isinstance(p.get("reality-opts"), dict):
-            print(f"#{i+1}: {json.dumps(p, ensure_ascii=False, default=str)}")
-            count += 1
-            if count >= 3:
-                break
+    sid = ro.get("short-id", "")
+    if not isinstance(sid, str):
+        sid = str(sid)
+    
+    if len(sid) not in STANDARD_LENGTHS:
+        non_standard.append((i+1, sid, p.get("name", "?")[:40]))
+
+print(f"\nتعداد proxy با طول غیر استاندارد: {len(non_standard)}")
+if non_standard:
+    print("\nنمونه‌ها (حداکثر 20 تا):")
+    for num, sid, name in non_standard[:20]:
+        print(f"  #{num} | len={len(sid):>2} | {sid!r} | {name}")
