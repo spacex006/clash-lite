@@ -4,8 +4,7 @@
 # ══════════════════════════════════════════════════════════════════
 
 # ── نمونه ─────────────────────────────────────────────────────────
-https://raw.githubusercontent.com/10ium/VpnClashFaCollector/refs/heads/main/sub/country/US.txt
-
+https://raw.githubusercontent.com/10Dream/VpnClashFaCollector/refs/heads/main/sub/all/mixed.txt
 
 # ── سورس‌های بیشتر را اینجا اضافه کن ─────────────────────────────
 # https://...
