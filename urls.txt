@@ -5,7 +5,8 @@
 
 # ── نمونه ─────────────────────────────────────────────────────────
 https://raw.githubusercontent.com/10Dream/VpnClashFaCollector/refs/heads/main/sub/all/mixed.txt
-https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/filtered/subs/hysteria2.txt
-
+https://raw.githubusercontent.com/Epodonios/v2ray-configs/refs/heads/main/All_Configs_Sub.txt
+https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/refs/heads/main/subscriptions/v2ray/all_sub.txt
+https://raw.githubusercontent.com/MohammadBahemmat/V2ray-Collector/main/all_servers.txt
 # ── سورس‌های بیشتر را اینجا اضافه کن ─────────────────────────────
 # https://...
