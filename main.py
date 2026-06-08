@@ -51,7 +51,7 @@ def main() -> int:
     from core.fetcher      import read_url_list, fetch_all
     from core.parser       import parse_many
     from core.deduplicator import deduplicate, tcp_filter_and_sort, unique_names
-    from core.fixer        import fix_all
+    from core.fixer        import fix_all, post_fix_filter
     from core.converter    import build_config, write_yaml
     from core.validator    import print_report
 
@@ -92,9 +92,19 @@ def main() -> int:
     # ─────────────────────────────────────────────────────────────────────────
     # ④ Fix
     # ─────────────────────────────────────────────────────────────────────────
-    _banner("④ FIX (REALITY short-id + …)")
+    _banner("④ FIX (REALITY short-id + VMess cipher + …)")
     proxies, n_fixes = fix_all(proxies)
     print(f"  اصلاحات انجام‌شده: {n_fixes}")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # ④-b فیلتر نهایی — حذف موارد نامعتبر باقیمانده
+    # ─────────────────────────────────────────────────────────────────────────
+    before_filter = len(proxies)
+    proxies, removed = post_fix_filter(proxies)
+    if removed:
+        print(f"  [post-filter] حذف شد: {len(removed)} proxy (از {before_filter})")
+    else:
+        print(f"  [post-filter] ✅ همه {before_filter} proxy معتبرند")
 
     # ─────────────────────────────────────────────────────────────────────────
     # ⑤ TCP Test & Sort
