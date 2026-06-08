@@ -117,8 +117,33 @@ def write_yaml(config: Dict, path: Path, proxy_count: int) -> None:
         "# ══════════════════════════════════════════════════════\n\n"
     )
 
+    # ── Custom representer: همه string ها رو با single-quote بنویس ────────
+    class QuotedStr(str):
+        pass
+
+    def quoted_str_representer(dumper, data):
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style="'")
+
+    yaml.add_representer(QuotedStr, quoted_str_representer)
+
+    # ── همه short-id ها و فیلدهای حساس رو wrap کن ────────────────────────
+    def wrap_sensitive(obj):
+        if isinstance(obj, dict):
+            new = {}
+            for k, v in obj.items():
+                if k in ("short-id", "public-key", "uuid", "password", "uri") and isinstance(v, str):
+                    new[k] = QuotedStr(v)
+                else:
+                    new[k] = wrap_sensitive(v)
+            return new
+        elif isinstance(obj, list):
+            return [wrap_sensitive(i) for i in obj]
+        return obj
+
+    safe_config = wrap_sensitive(config)
+
     body = yaml.dump(
-        config,
+        safe_config,
         allow_unicode=True,
         sort_keys=False,
         default_flow_style=False,
