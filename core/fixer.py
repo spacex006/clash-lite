@@ -66,24 +66,21 @@ def fix_vmess_cipher(cipher) -> Tuple[str, bool]:
 # Shadowsocks cipher
 # ──────────────────────────────────────────────────────────────────────────────
 
-# مقادیر معتبر cipher برای Shadowsocks در Mihomo/Clash
 VALID_SS_CIPHERS = frozenset({
-    # AEAD (پیشنهادی)
     "aes-128-gcm", "aes-192-gcm", "aes-256-gcm",
     "chacha20-ietf-poly1305", "xchacha20-ietf-poly1305",
-    # AEAD 2022
     "2022-blake3-aes-128-gcm",
     "2022-blake3-aes-256-gcm",
     "2022-blake3-chacha20-poly1305",
-    # Stream (legacy)
     "aes-128-ctr", "aes-192-ctr", "aes-256-ctr",
     "aes-128-cfb", "aes-192-cfb", "aes-256-cfb",
     "rc4-md5", "chacha20-ietf", "xchacha20",
-    # سایر
     "none", "plain",
 })
 
-# نگاشت مقادیر اشتباه به معتبر
+# cipher هایی که password اختیاری دارند
+SS_CIPHERS_NO_PASSWORD = frozenset({"none", "plain"})
+
 _SS_ALIASES = {
     "auto":                    "aes-256-gcm",
     "chacha20":                "chacha20-ietf-poly1305",
@@ -93,12 +90,6 @@ _SS_ALIASES = {
 
 
 def fix_ss_cipher(cipher) -> Tuple[str, bool]:
-    """
-    اصلاح cipher Shadowsocks.
-    اگر معتبر بود → بدون تغییر
-    اگر در alias بود → نگاشت
-    در غیر اینصورت → None برمی‌گرداند (proxy باید حذف شود)
-    """
     raw = str(cipher or "").strip()
     clean = raw.lower()
 
@@ -108,7 +99,6 @@ def fix_ss_cipher(cipher) -> Tuple[str, bool]:
     if clean in _SS_ALIASES:
         return _SS_ALIASES[clean], True
 
-    # نامعتبر — برمی‌گرداند رشته خالی تا در post_fix_filter حذف شود
     return "", True
 
 
@@ -217,17 +207,39 @@ def post_fix_filter(proxies: List[Dict]) -> Tuple[List[Dict], List[str]]:
                 if not sid or not is_valid_short_id(str(sid)):
                     issue = f"REALITY short-id نامعتبر: {sid!r}"
 
-        # ── VMess cipher ────────────────────────────────────────────────
+        # ── VMess ───────────────────────────────────────────────────────
         if not issue and ptype == "vmess":
             cipher = str(p.get("cipher", "")).strip()
             if cipher not in VALID_VMESS_CIPHERS:
                 issue = f"vmess cipher نامعتبر: {cipher!r}"
+            elif not str(p.get("uuid", "")).strip():
+                issue = "vmess uuid خالی است"
 
-        # ── Shadowsocks cipher ──────────────────────────────────────────
+        # ── Shadowsocks ─────────────────────────────────────────────────
         if not issue and ptype == "ss":
             cipher = str(p.get("cipher", "")).strip().lower()
             if not cipher or cipher not in VALID_SS_CIPHERS:
                 issue = f"ss cipher نامعتبر: {cipher!r}"
+            else:
+                # password اجباری است (مگر برای none/plain)
+                pwd = str(p.get("password", "")).strip()
+                if not pwd and cipher not in SS_CIPHERS_NO_PASSWORD:
+                    issue = f"ss password خالی است (cipher={cipher})"
+
+        # ── VLESS ───────────────────────────────────────────────────────
+        if not issue and ptype == "vless":
+            if not str(p.get("uuid", "")).strip():
+                issue = "vless uuid خالی است"
+
+        # ── Trojan ──────────────────────────────────────────────────────
+        if not issue and ptype == "trojan":
+            if not str(p.get("password", "")).strip():
+                issue = "trojan password خالی است"
+
+        # ── Hysteria2 ───────────────────────────────────────────────────
+        if not issue and ptype == "hysteria2":
+            if not str(p.get("password", "")).strip():
+                issue = "hysteria2 password خالی است"
 
         # ── server و port ───────────────────────────────────────────────
         if not issue:
