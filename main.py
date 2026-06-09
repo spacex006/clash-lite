@@ -1,17 +1,6 @@
 #!/usr/bin/env python3
 """
 main.py — orchestrator اصلی پایپلاین.
-
-ترتیب اجرا:
-  ① fetch      → URI های خام از همه سورس‌ها
-  ② parse      → تبدیل به proxy dict
-  ③ dedup      → حذف تکراری سنگین (UUID / IP / name)
-  ④ fix        → اصلاح REALITY short-id و سایر مشکلات
-  ④-b sanitize → حذف کاراکترهای کنترلی از همه فیلدها
-  ④-c filter   → حذف proxy های هنوز نامعتبر
-  ⑤ tcp_test   → تست موازی + مرتب‌سازی بر اساس latency
-  ⑥ convert    → ساخت Clash YAML (AUTO + MANUAL)
-  ⑦ validate   → اعتبارسنجی خروجی
 """
 
 from __future__ import annotations
@@ -20,12 +9,10 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# ── تنظیمات ──────────────────────────────────────────────────────────────────
 URLS_FILE    = Path("urls.txt")
 CONFIGS_TXT  = Path("output/configs.txt")
 PROFILE_YAML = Path("output/profile.yaml")
 
-# ── گزینه‌های dedup ───────────────────────────────────────────────────────────
 from core.deduplicator import DedupConfig
 DEDUP_CFG = DedupConfig(
     uuid_dedup        = False,
@@ -36,7 +23,6 @@ DEDUP_CFG = DedupConfig(
     tcp_workers       = 120,
 )
 
-# ──────────────────────────────────────────────────────────────────────────────
 
 def _banner(step: str, n: int = 0) -> None:
     suffix = f"  ({n:,})" if n else ""
@@ -49,76 +35,47 @@ def main() -> int:
     start = datetime.now(timezone.utc)
     print(f"🚀  clash-lite pipeline — {start.strftime('%Y-%m-%d %H:%M UTC')}")
 
-    # ── imports داخلی ─────────────────────────────────────────────────────────
-    from core.fetcher      import read_url_list, fetch_all
-    from core.parser       import parse_many
+    from core.fetcher import read_url_list, fetch_all
+    from core.parser import parse_many
     from core.deduplicator import deduplicate, tcp_filter_and_sort, unique_names
-    from core.fixer        import fix_all, post_fix_filter
-    from core.sanitizer    import sanitize_all
-    from core.converter    import build_config, write_yaml
-    from core.validator    import print_report
+    from core.fixer import fix_all, post_fix_filter
+    from core.sanitizer import sanitize_all
+    from core.mihomo_validator import validate_with_mihomo
+    from core.converter import build_config, write_yaml
+    from core.validator import print_report
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # ① Fetch
-    # ─────────────────────────────────────────────────────────────────────────
     if not URLS_FILE.exists():
         print(f"❌  {URLS_FILE} یافت نشد.", file=sys.stderr)
         return 1
 
     urls = read_url_list(str(URLS_FILE))
     _banner("① FETCH", len(urls))
-
     raw_uris = fetch_all(urls)
-    print(f"  جمع URI های دریافتی: {len(raw_uris):,}")
-
+    print(f"  جمع URI : {len(raw_uris):,}")
     if not raw_uris:
-        print("⚠  هیچ URI ای دریافت نشد.", file=sys.stderr)
         return 1
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # ② Parse
-    # ─────────────────────────────────────────────────────────────────────────
     _banner("② PARSE", len(raw_uris))
     proxies, parse_errors = parse_many(raw_uris)
-    print(f"  پارس موفق : {len(proxies):,}")
-    print(f"  رد شده   : {parse_errors:,}")
+    print(f"  پارس موفق : {len(proxies):,} | رد شده : {parse_errors:,}")
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # ③ Dedup
-    # ─────────────────────────────────────────────────────────────────────────
-    _banner("③ DEDUP (uuid/ip/name)")
+    _banner("③ DEDUP")
     before = len(proxies)
     proxies = deduplicate(proxies, DEDUP_CFG)
-    print(f"  قبل از dedup : {before:,}")
-    print(f"  بعد از dedup : {len(proxies):,}  (−{before - len(proxies):,})")
+    print(f"  {before:,} → {len(proxies):,}  (−{before - len(proxies):,})")
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # ④ Fix
-    # ─────────────────────────────────────────────────────────────────────────
-    _banner("④ FIX (REALITY short-id + VMess cipher + …)")
+    _banner("④ FIX")
     proxies, n_fixes = fix_all(proxies)
-    print(f"  اصلاحات انجام‌شده: {n_fixes}")
+    print(f"  اصلاحات: {n_fixes}")
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # ④-b Sanitize — حذف کاراکترهای کنترلی از همه فیلدها
-    # ─────────────────────────────────────────────────────────────────────────
-    _banner("④-b SANITIZE (حذف کاراکترهای کنترلی)")
+    _banner("④-b SANITIZE")
     proxies, n_san = sanitize_all(proxies)
-    print(f"  proxy های پاکسازی‌شده: {n_san}")
+    print(f"  پاکسازی: {n_san}")
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # ④-c فیلتر نهایی — حذف موارد نامعتبر باقیمانده
-    # ─────────────────────────────────────────────────────────────────────────
     before_filter = len(proxies)
     proxies, removed = post_fix_filter(proxies)
-    if removed:
-        print(f"  [post-filter] حذف شد: {len(removed)} proxy (از {before_filter})")
-    else:
-        print(f"  [post-filter] ✅ همه {before_filter} proxy معتبرند")
+    print(f"  [post-filter] حذف شد: {len(removed)} (از {before_filter})")
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # ⑤ TCP Test & Sort
-    # ─────────────────────────────────────────────────────────────────────────
     if DEDUP_CFG.tcp_test:
         _banner("⑤ TCP TEST + SORT", len(proxies))
         alive, dead = tcp_filter_and_sort(
@@ -128,22 +85,22 @@ def main() -> int:
         )
         print(f"  زنده : {len(alive):,}  |  مرده : {len(dead):,}")
         proxies = alive
-    else:
-        print("\n⑤ TCP TEST  →  غیرفعال (DEDUP_CFG.tcp_test = False)")
 
     if not proxies:
-        print("⚠  هیچ proxy زنده‌ای نماند.", file=sys.stderr)
         return 1
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # یکتاسازی نام‌ها (پس از sort)
-    # ─────────────────────────────────────────────────────────────────────────
+    # یکتاسازی نام‌ها قبل از Mihomo
     proxies = unique_names(proxies)
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # ⑥ ذخیره configs.txt
-    # ─────────────────────────────────────────────────────────────────────────
-    _banner("⑥ SAVE configs.txt", len(proxies))
+    # ⑥ Mihomo validation (سریع، فقط parse check)
+    _banner("⑥ MIHOMO VALIDATION (~30s)", len(proxies))
+    proxies = validate_with_mihomo(proxies)
+
+    if not proxies:
+        print("⚠ هیچ proxy معتبری نموند.")
+        return 1
+
+    _banner("⑦ SAVE configs.txt", len(proxies))
     CONFIGS_TXT.parent.mkdir(parents=True, exist_ok=True)
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     uris_out = [p.get("_uri", "") for p in proxies if p.get("_uri")]
@@ -154,26 +111,16 @@ def main() -> int:
     )
     print(f"  ✅  ذخیره شد → {CONFIGS_TXT}")
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # ⑦ Convert → Clash YAML
-    # ─────────────────────────────────────────────────────────────────────────
-    _banner("⑦ CONVERT → Clash YAML")
+    _banner("⑧ CONVERT → YAML")
     config = build_config(proxies)
     write_yaml(config, PROFILE_YAML, len(proxies))
     print(f"  ✅  ذخیره شد → {PROFILE_YAML}")
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # ⑧ Validate
-    # ─────────────────────────────────────────────────────────────────────────
-    _banner("⑧ VALIDATE YAML")
+    _banner("⑨ VALIDATE")
     ok = print_report(PROFILE_YAML)
 
-    # ─────────────────────────────────────────────────────────────────────────
     elapsed = (datetime.now(timezone.utc) - start).seconds
-    print(f"✅  پایپلاین تمام شد در {elapsed}s  |  {len(proxies):,} proxy")
-    print(f"   configs.txt → {CONFIGS_TXT}")
-    print(f"   profile.yaml → {PROFILE_YAML}\n")
-
+    print(f"\n✅  پایپلاین تمام شد در {elapsed}s  |  {len(proxies):,} proxy")
     return 0 if ok else 1
 
 
