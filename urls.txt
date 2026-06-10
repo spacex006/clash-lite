@@ -6,4 +6,10 @@
 # ── Source ─────────────────────────────────────────────────────────
 https://raw.githubusercontent.com/10Dream/VpnClashFaCollector/refs/heads/main/sub/all/mixed.txt
 https://raw.githubusercontent.com/Epodonios/v2ray-configs/refs/heads/main/All_Configs_Sub.txt
-https://raw.githubusercontent.com/Danialsamadi/v2go/refs/heads/main/AllConfigsSub.txt
+https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/main/configs/light.txt
+https://raw.githubusercontent.com/R3ZARAHIMI/tg-v2ray-configs-every2h/main/Config_jo.txt
+https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/main/Config/vless.txt
+https://raw.githubusercontent.com/ALIILAPRO/v2rayNG-Config/main/server.txt
+https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY.txt
+https://raw.githubusercontent.com/free18/v2ray/refs/heads/main/v.txt
+https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY.txt
