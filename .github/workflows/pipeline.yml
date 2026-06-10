@@ -2,7 +2,7 @@ name: 🔄 Proxy Pipeline (Lite + Mihomo Validation)
 
 on:
   schedule:
-    - cron: '0 */12 * * *'   # هر 12 ساعت
+    - cron: '0 */8 * * *'   # هر 8 ساعت
   workflow_dispatch:
   push:
     paths:
