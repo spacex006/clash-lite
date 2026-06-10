@@ -10,6 +10,4 @@ https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/main/configs/light
 https://raw.githubusercontent.com/R3ZARAHIMI/tg-v2ray-configs-every2h/main/Config_jo.txt
 https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/main/Config/vless.txt
 https://raw.githubusercontent.com/ALIILAPRO/v2rayNG-Config/main/server.txt
-https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY.txt
 https://raw.githubusercontent.com/free18/v2ray/refs/heads/main/v.txt
-https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY.txt
