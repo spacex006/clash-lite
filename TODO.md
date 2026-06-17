@@ -1,0 +1,3 @@
+- [x] Update `core/fixer.py` to normalize/remove unsupported VLESS `flow` values (specifically `ctlst-rprx-visio`) and log which proxies were changed.
+- [ ] Run a local pipeline/test (python main.py) to ensure YAML is generated without breaking.
+- [ ] (Optional) Re-run `core/validator.py` and inspect generated `output/profile.yaml` for the updated flow field behavior.
