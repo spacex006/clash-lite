@@ -176,8 +176,10 @@ def fix_proxy(p: Dict) -> Tuple[Dict, List[str]]:
         flow = p.get("flow", "")
         flow_norm = str(flow or "").strip()
 
-        # برای rprx-variant ها که در FClash پشتیبانی نمی‌شوند، فیلد flow حذف می‌شود
-        if flow_norm.startswith("xtls-rprx-") or flow_norm.startswith("ctlst-rprx-"):
+        # فقط flow های معتبر در FClash/Mihomo نگه داشته می‌شوند؛
+        # بقیه (رپرکس، تایپو و غیره) حذف می‌شوند.
+        VALID_XTLS_FLOWS = {"xtls-rprx-vision", "xtls-rprx-vision-udp443"}
+        if flow_norm and flow_norm not in VALID_XTLS_FLOWS:
             p.pop("flow", None)
             changes.append(f"[{name}] vless flow: removed unsupported {flow_norm!r}")
 
