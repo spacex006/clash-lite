@@ -172,14 +172,12 @@ def fix_proxy(p: Dict) -> Tuple[Dict, List[str]]:
 
     # ── ③ VLESS flow (xtls) compatibility ───────────────────────────────────
     # FClash/Mihomo ممکن است بعضی xtls flow type ها را پشتیبانی نکنند.
-    # خطای گزارش‌شده:
-    #   unsupported xtls flow type: ctlst-rprx-visio
     if p.get("type") == "vless":
         flow = p.get("flow", "")
         flow_norm = str(flow or "").strip()
-        # اگر دقیقاً مقدار مشکل‌دار باشد، فیلد flow حذف می‌شود
-        # تا core از default خودش استفاده کند.
-        if flow_norm == "ctlst-rprx-visio":
+
+        # برای rprx-variant ها که در FClash پشتیبانی نمی‌شوند، فیلد flow حذف می‌شود
+        if flow_norm.startswith("xtls-rprx-") or flow_norm.startswith("ctlst-rprx-"):
             p.pop("flow", None)
             changes.append(f"[{name}] vless flow: removed unsupported {flow_norm!r}")
 
